@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ಕನ್ನಡ Translator — English to Kannada</title>
+  <meta name="description" content="Instantly translate English text to Kannada with our beautiful AI-powered translator app." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Kannada:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:    #0a0e1a;
+      --bg-mid:     #0f1629;
+      --glass:      rgba(255,255,255,0.05);
+      --glass-b:    rgba(255,255,255,0.10);
+      --accent1:    #6c63ff;
+      --accent2:    #a78bfa;
+      --accent3:    #38bdf8;
+      --success:    #34d399;
+      --error:      #f87171;
+      --text-main:  #e2e8f0;
+      --text-muted: #8892a4;
+      --border:     rgba(255,255,255,0.08);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated gradient background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(108,99,255,.22) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(56,189,248,.18) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(167,139,250,.10) 0%, transparent 60%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+    }
+    @keyframes bgPulse {
+      from { opacity: .8; transform: scale(1); }
+      to   { opacity: 1;  transform: scale(1.04); }
+    }
+
+    /* ── Floating particles ── */
+    .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .particle {
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: var(--accent2);
+      opacity: 0;
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0%   { opacity: 0;   transform: translateY(100vh) scale(0); }
+      10%  { opacity: .6; }
+      90%  { opacity: .3; }
+      100% { opacity: 0;   transform: translateY(-10vh) scale(1.5); }
+    }
+
+    /* ── Layout ── */
+    .wrapper {
+      position: relative; z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      animation: fadeDown .7s ease both;
+    }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:none; } }
+
+    .logo-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--glass-b);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: .35rem 1rem;
+      font-size: .8rem; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 1.2rem;
+      backdrop-filter: blur(10px);
+    }
+    .logo-badge .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #fff 0%, var(--accent2) 50%, var(--accent3) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      margin-top: .65rem;
+      color: var(--text-muted);
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow: hidden;
+      box-shadow: 0 8px 60px rgba(0,0,0,.45);
+      animation: fadeUp .7s .15s ease both;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:none; } }
+
+    /* ── Language bar ── */
+    .lang-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .lang-tag {
+      display: flex; align-items: center; gap: .45rem;
+      font-size: .85rem; font-weight: 600;
+      letter-spacing: .05em; text-transform: uppercase;
+    }
+    .lang-flag { font-size: 1.3rem; }
+    .lang-name { color: var(--text-muted); }
+    .lang-name span { color: var(--text-main); }
+
+    .swap-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      border: none; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(108,99,255,.4);
+      transition: transform .3s, box-shadow .3s;
+    }
+    .swap-btn:hover { transform: rotate(180deg); box-shadow: 0 4px 30px rgba(108,99,255,.7); }
+    .swap-btn svg { width: 18px; height: 18px; fill: #fff; }
+
+    /* ── Text areas ── */
+    .panels { display: grid; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 640px) { .panels { grid-template-columns: 1fr; } }
+
+    .panel { display: flex; flex-direction: column; position: relative; }
+    .panel:first-child { border-right: 1px solid var(--border); }
+    @media (max-width: 640px) { .panel:first-child { border-right: none; border-bottom: 1px solid var(--border); } }
+
+    .panel-label {
+      padding: .85rem 1.25rem .4rem;
+      font-size: .75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-muted);
+    }
+
+    textarea, .output-box {
+      flex: 1;
+      min-height: 220px;
+      padding: .75rem 1.25rem 1.5rem;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      background: transparent;
+      border: none; outline: none;
+      resize: none;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+    }
+    textarea::placeholder { color: var(--text-muted); }
+
+    .output-box {
+      font-family: 'Noto Sans Kannada', 'Inter', sans-serif;
+      font-size: 1.15rem;
+      color: var(--accent2);
+      min-height: 220px;
+      cursor: default;
+    }
+    .output-box.placeholder-txt { color: var(--text-muted); font-size: 1rem; font-family: 'Inter', sans-serif; }
+
+    /* ── Character count ── */
+    .char-count {
+      position: absolute; bottom: .6rem; left: 1.25rem;
+      font-size: .72rem; color: var(--text-muted);
+    }
+
+    /* ── Action bar ── */
+    .action-bar {
+      display: flex; align-items: center; gap: .75rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: .45rem;
+      padding: .6rem 1.3rem;
+      border-radius: 12px; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem; font-weight: 600;
+      transition: all .25s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(108,99,255,.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(108,99,255,.65); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: var(--glass-b);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+    .btn-ghost:hover { color: var(--text-main); border-color: var(--accent2); background: rgba(167,139,250,.1); }
+
+    .btn-icon svg { width: 16px; height: 16px; fill: currentColor; }
+
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading .spinner { display: block; }
+    .loading .btn-label { display: none; }
+
+    /* ── Status toast ── */
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--bg-mid);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: .75rem 1.5rem;
+      font-size: .9rem;
+      box-shadow: 0 8px 40px rgba(0,0,0,.5);
+      backdrop-filter: blur(16px);
+      z-index: 100;
+      transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      opacity: 0;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error   { border-color: var(--error);   color: var(--error);   }
+
+    /* ── Quick phrases ── */
+    .quick-section { animation: fadeUp .7s .3s ease both; margin-top: 1.5rem; }
+    .quick-label {
+      font-size: .78rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-muted);
+      margin-bottom: .75rem;
+    }
+    .quick-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .chip {
+      padding: .42rem .9rem;
+      border-radius: 999px;
+      background: var(--glass-b);
+      border: 1px solid var(--border);
+      font-size: .82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .2s;
+      backdrop-filter: blur(8px);
+    }
+    .chip:hover {
+      color: var(--text-main);
+      border-color: var(--accent2);
+      background: rgba(167,139,250,.12);
+      transform: translateY(-2px);
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: var(--text-muted);
+      font-size: .8rem;
+      animation: fadeUp .7s .5s ease both;
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Copy success flash ── */
+    @keyframes copyFlash {
+      0%   { background: rgba(52,211,153,.15); }
+      100% { background: transparent; }
+    }
+    .copy-flash { animation: copyFlash .6s ease; }
+  </style>
+</head>
+<body>
+
+<!-- Floating particles -->
+<div class="particles" id="particles"></div>
+
+<div class="wrapper">
+
+  <!-- Header -->
+  <header>
+    <div class="logo-badge">
+      <span class="dot"></span>
+      AI Powered Translator
+    </div>
+    <h1>English → ಕನ್ನಡ</h1>
+    <p class="subtitle">Instantly translate English text to Kannada with high accuracy</p>
+  </header>
+
+  <!-- Main Card -->
+  <div class="card">
+
+    <!-- Language bar -->
+    <div class="lang-bar">
+      <div class="lang-tag">
+        <span class="lang-flag">🇬🇧</span>
+        <span class="lang-name">Source: <span>English</span></span>
+      </div>
+
+      <button class="swap-btn" id="swapBtn" title="Languages">
+        <svg viewBox="0 0 24 24"><path d="M7.5 21.5l-5-5 5-5v3H20v2H7.5v5zm9-11v-5l5 5-5 5v-3H4v-2h12.5z"/></svg>
+      </button>
+
+      <div class="lang-tag">
+        <span class="lang-flag">🇮🇳</span>
+        <span class="lang-name">Target: <span>ಕನ್ನಡ (Kannada)</span></span>
+      </div>
+    </div>
+
+    <!-- Text panels -->
+    <div class="panels">
+      <!-- Input -->
+      <div class="panel">
+        <div class="panel-label">Enter English Text</div>
+        <textarea
+          id="inputText"
+          placeholder="Type or paste English text here…"
+          maxlength="5000"
+          spellcheck="true"
+        ></textarea>
+        <span class="char-count"><span id="charCount">0</span> / 5000</span>
+      </div>
+
+      <!-- Output -->
+      <div class="panel">
+        <div class="panel-label">Kannada Translation</div>
+        <div class="output-box placeholder-txt" id="outputBox">
+          Translation will appear here…
+        </div>
+        <span class="char-count" id="outputCharCount"></span>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    <div class="action-bar">
+      <button class="btn btn-primary" id="translateBtn">
+        <div class="spinner"></div>
+        <span class="btn-label">
+          <svg class="btn-icon" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+          Translate
+        </span>
+      </button>
+
+      <button class="btn btn-ghost btn-icon" id="copyBtn" title="Copy translation">
+        <svg viewBox="0 0 24 24"><path d="M16 1H4a2 2 0 00-2 2v14h2V3h12V1zm3 4H8a2 2 0 00-2 2v14a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm0 16H8V7h11v14z"/></svg>
+        Copy
+      </button>
+
+      <button class="btn btn-ghost btn-icon" id="speakBtn" title="Listen to Kannada">
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        Listen
+      </button>
+
+      <button class="btn btn-ghost btn-icon" id="clearBtn" title="Clear text">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        Clear
+      </button>
+
+      <div style="margin-left:auto; font-size:.8rem; color:var(--text-muted);" id="statusText"></div>
+    </div>
+  </div>
+
+  <!-- Quick phrases -->
+  <div class="quick-section">
+    <div class="quick-label">Quick Phrases</div>
+    <div class="quick-chips" id="quickChips"></div>
+  </div>
+
+  <footer>
+    <p>Built with ❤️ using <a href="#">Flask</a> &amp; Google Translate API &nbsp;·&nbsp; Supports Kannada (ಕನ್ನಡ)</p>
+  </footer>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ── Particles ── */
+  (function () {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 28; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.cssText = `
+        left: ${Math.random() * 100}%;
+        width: ${Math.random() * 3 + 1}px;
+        height: ${Math.random() * 3 + 1}px;
+        animation-duration: ${Math.random() * 18 + 10}s;
+        animation-delay: ${Math.random() * 10}s;
+        background: ${Math.random() > .5 ? 'var(--accent1)' : 'var(--accent3)'};
+      `;
+      container.appendChild(p);
+    }
+  })();
+
+  /* ── Quick phrases ── */
+  const phrases = [
+    "Hello, how are you?",
+    "Good morning",
+    "Thank you very much",
+    "Where is the bus stop?",
+    "What is your name?",
+    "I love Kannada culture",
+    "Please help me",
+    "How much does this cost?",
+  ];
+  const chipsEl = document.getElementById('quickChips');
+  phrases.forEach(phrase => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = phrase;
+    chip.addEventListener('click', () => {
+      inputEl.value = phrase;
+      updateCharCount();
+      doTranslate();
+    });
+    chipsEl.appendChild(chip);
+  });
+
+  /* ── Elements ── */
+  const inputEl      = document.getElementById('inputText');
+  const outputBox    = document.getElementById('outputBox');
+  const charCountEl  = document.getElementById('charCount');
+  const translateBtn = document.getElementById('translateBtn');
+  const copyBtn      = document.getElementById('copyBtn');
+  const speakBtn     = document.getElementById('speakBtn');
+  const clearBtn     = document.getElementById('clearBtn');
+  const statusText   = document.getElementById('statusText');
+  const toastEl      = document.getElementById('toast');
+
+  let toastTimer = null;
+  let currentTranslation = '';
+
+  /* ── Char counter ── */
+  function updateCharCount() {
+    charCountEl.textContent = inputEl.value.length;
+  }
+  inputEl.addEventListener('input', updateCharCount);
+
+  /* ── Auto-translate on pause ── */
+  let debounceTimer;
+  inputEl.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    if (inputEl.value.trim().length > 2) {
+      debounceTimer = setTimeout(doTranslate, 900);
+    }
+  });
+
+  /* ── Toast ── */
+  function showToast(msg, type = 'success') {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.className = `toast ${type} show`;
+    toastTimer = setTimeout(() => { toastEl.className = 'toast'; }, 2800);
+  }
+
+  /* ── Translate ── */
+  async function doTranslate() {
+    const text = inputEl.value.trim();
+    if (!text) {
+      outputBox.textContent = 'Translation will appear here…';
+      outputBox.className = 'output-box placeholder-txt';
+      currentTranslation = '';
+      statusText.textContent = '';
+      return;
+    }
+
+    translateBtn.classList.add('loading');
+    translateBtn.disabled = true;
+    statusText.textContent = 'Translating…';
+
+    try {
+      const res = await fetch('/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        currentTranslation = data.translation;
+        outputBox.textContent = currentTranslation;
+        outputBox.className = 'output-box';
+        document.getElementById('outputCharCount').textContent =
+          currentTranslation.length + ' chars';
+        statusText.textContent = '✓ Translated';
+        setTimeout(() => { statusText.textContent = ''; }, 2000);
+      } else {
+        showToast('Translation failed: ' + (data.error || 'Unknown error'), 'error');
+        statusText.textContent = '';
+      }
+    } catch (err) {
+      showToast('Network error. Make sure Flask is running.', 'error');
+      statusText.textContent = '';
+    } finally {
+      translateBtn.classList.remove('loading');
+      translateBtn.disabled = false;
+    }
+  }
+
+  translateBtn.addEventListener('click', doTranslate);
+
+  /* ── Enter key shortcut ── */
+  inputEl.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') doTranslate();
+  });
+
+  /* ── Copy ── */
+  copyBtn.addEventListener('click', async () => {
+    if (!currentTranslation) { showToast('Nothing to copy yet!', 'error'); return; }
+    try {
+      await navigator.clipboard.writeText(currentTranslation);
+      outputBox.classList.add('copy-flash');
+      setTimeout(() => outputBox.classList.remove('copy-flash'), 600);
+      showToast('✓ Copied to clipboard!');
+    } catch {
+      showToast('Copy failed — please select and copy manually.', 'error');
+    }
+  });
+
+  /* ── Listen (TTS) ── */
+  speakBtn.addEventListener('click', () => {
+    if (!currentTranslation) { showToast('Nothing to speak yet!', 'error'); return; }
+    const utt = new SpeechSynthesisUtterance(currentTranslation);
+    utt.lang = 'kn-IN';
+    utt.rate = 0.85;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utt);
+    showToast('🔊 Speaking in Kannada…');
+  });
+
+  /* ── Clear ── */
+  clearBtn.addEventListener('click', () => {
+    inputEl.value = '';
+    updateCharCount();
+    outputBox.textContent = 'Translation will appear here…';
+    outputBox.className = 'output-box placeholder-txt';
+    currentTranslation = '';
+    document.getElementById('outputCharCount').textContent = '';
+    statusText.textContent = '';
+    inputEl.focus();
+  });
+
+  /* ── Swap button (decorative — flips label colours) ── */
+  document.getElementById('swapBtn').addEventListener('click', () => {
+    showToast('ℹ️ This app translates English → Kannada only.');
+  });
+</script>
+</body>
+</html>
